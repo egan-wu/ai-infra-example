@@ -134,6 +134,8 @@ public:
 // =============================================================================
 class TPU : public sc_module {
 public:
+    SC_HAS_PROCESS(TPU);
+
     tlm_utils::simple_target_socket<TPU> t_socket;    // Config/Status
     tlm_utils::simple_initiator_socket<TPU> i_socket; // DMA to RAM
     sc_out<bool> irq_out;
@@ -301,6 +303,8 @@ private:
 // =============================================================================
 class CPU : public sc_module {
 public:
+    SC_HAS_PROCESS(CPU);
+
     tlm_utils::simple_initiator_socket<CPU> i_socket;
     sc_in<bool> irq_in;
 
