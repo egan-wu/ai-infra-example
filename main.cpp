@@ -134,8 +134,6 @@ public:
 // =============================================================================
 class TPU : public sc_module {
 public:
-    SC_HAS_PROCESS(TPU);
-
     tlm_utils::simple_target_socket<TPU> t_socket;    // Config/Status
     tlm_utils::simple_initiator_socket<TPU> i_socket; // DMA to RAM
     sc_out<bool> irq_out;
@@ -303,8 +301,6 @@ private:
 // =============================================================================
 class CPU : public sc_module {
 public:
-    SC_HAS_PROCESS(CPU);
-
     tlm_utils::simple_initiator_socket<CPU> i_socket;
     sc_in<bool> irq_in;
 
@@ -362,6 +358,17 @@ public:
         return data;
     }
 
+    void print_matrix(const char* name, uint64_t base_addr, int n) {
+        cout << "[CPU] Data for " << name << ":" << endl;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                float val = mem_read_float(base_addr + (i * n + j) * sizeof(float));
+                cout << setw(8) << fixed << setprecision(2) << val << " ";
+            }
+            cout << endl;
+        }
+    }
+
     void run_test() {
         cout << "[CPU] Starting Testbench..." << endl;
 
@@ -386,6 +393,10 @@ public:
             mem_write_float(addr_b + i*4, ref_B[i]);
         }
 
+        // Print Input Matrices
+        print_matrix("Matrix A", addr_a, n);
+        print_matrix("Matrix B", addr_b, n);
+
         // Configure TPU
         cout << "[CPU] Configuring TPU..." << endl;
         bus_write(TPU_BASE_ADDR + REG_ADDR_SRC_A, addr_a);
@@ -409,6 +420,9 @@ public:
         } else {
             cout << "[CPU] Unexpected TPU status: " << status << endl;
         }
+
+        // Print Output Matrix
+        print_matrix("Matrix C (Result)", addr_c, n);
 
         // Verify Result
         cout << "[CPU] Verifying Results..." << endl;
