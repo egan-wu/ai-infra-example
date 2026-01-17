@@ -2,15 +2,28 @@
 #include "ram.h"
 #include "simplebus.h"
 #include "tpu.h"
+
+#ifdef USE_GEM5
+#include "gem5_wrapper.h"
+#else
 #include "cpu.h"
+#endif
 
 int sc_main(int argc, char* argv[]) {
     RAM ram("ram");
     SimpleBus bus("bus");
     TPU tpu("tpu");
-    CPU cpu("cpu");
 
-    // Connect CPU -> Bus
+#ifdef USE_GEM5
+    std::cout << "[Main] Mode: Gem5 Co-Simulation" << std::endl;
+    // We assume the config file is at /app/gem5_config.py
+    Gem5Wrapper cpu("gem5_wrapper", "/app/gem5_config.py");
+#else
+    std::cout << "[Main] Mode: Simple CPU Testbench" << std::endl;
+    CPU cpu("cpu");
+#endif
+
+    // Connect CPU/Gem5 -> Bus
     cpu.i_socket.bind(bus.t_socket_cpu);
 
     // Connect Bus -> RAM

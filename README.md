@@ -1,48 +1,40 @@
-# SystemC TPU Simulation
+# SystemC TPU Simulation (Dual Mode: Simple & Gem5)
 
-This project simulates a simplified SoC with a CPU, Memory (RAM), and a TPU Accelerator using SystemC and TLM-2.0.
+This project simulates a simplified SoC with a CPU, Memory (RAM), and a TPU Accelerator using SystemC and TLM-2.0. It supports two modes of operation: a fast internal testbench and a full-system Gem5 co-simulation.
 
 ## Project Structure
 
-*   `main.cpp`, `ram.h/cpp`, `simplebus.h/cpp`, `tpu.h/cpp`, `cpu.h/cpp`: The source code split into modules.
-*   `memory_map.h`: Shared constants for memory addressing and registers.
-*   `Dockerfile`: Docker configuration to build the environment and the project.
-*   `Makefile`: Build script.
+*   `main.cpp`: Entry point switching between modes.
+*   `ram.h/cpp`, `simplebus.h/cpp`, `tpu.h/cpp`: Core SystemC modules.
+*   `cpu.h/cpp`: Simple testbench module.
+*   `gem5_wrapper.h/cpp`: Wrapper to integrate Gem5.
+*   `gem5_config.py`: Gem5 Python configuration script.
+*   `test_app.c`: Guest application running inside Gem5.
+*   `Dockerfile`: Builds the environment (SystemC + Gem5).
+*   `Makefile`: Build script for both targets.
 
 ## Instructions
 
 ### 1. Build the Docker Image
 
-Run the following command in the terminal to build the Docker image. This will download SystemC, compile it, and build the simulation project.
+This step downloads SystemC, Gem5, and compiles everything. It may take 45+ minutes due to Gem5 compilation.
 
 ```bash
 docker build -t systemc-tpu .
 ```
 
-### 2. Run the Simulation
+### 2. Run Mode A: Simple CPU (Fast)
 
-Run the container to execute the simulation:
+Uses the internal SystemC testbench.
 
 ```bash
-docker run --rm systemc-tpu
+docker run --rm systemc-tpu make run_simple
 ```
 
-You should see output similar to:
+### 3. Run Mode B: Gem5 CPU (Performance/Realism)
 
-```
-[CPU] Starting Testbench...
-[CPU] Initializing RAM...
-[CPU] Data for Matrix A:
-   1.00    2.00 ...
-[CPU] Data for Matrix B:
-   ...
-[CPU] Configuring TPU...
-[CPU] Starting TPU...
-[CPU] Waiting for Interrupt...
-[CPU] Interrupt Received!
-[CPU] TPU reported DONE.
-[CPU] Data for Matrix C (Result):
-   ...
-[CPU] Verifying Results...
-TEST PASSED
+Uses the Gem5 simulator (ARM) to run `test_app.c` which drives the TPU.
+
+```bash
+docker run --rm systemc-tpu make run_gem5
 ```
